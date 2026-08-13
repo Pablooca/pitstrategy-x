@@ -54,7 +54,7 @@ pitstrategy-x/
 ### Quick Setup
 ```bash
 # Clone repository
-git clone https://github.com/your-username/pitstrategy-x.git
+git clone https://github.com/Pablooca/pitstrategy-x.git
 cd pitstrategy-x
 
 # Spin up core infrastructure (Kafka, Postgres/PostGIS, Camunda)
