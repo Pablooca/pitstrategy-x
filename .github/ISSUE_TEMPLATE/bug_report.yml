@@ -1,0 +1,47 @@
+name: Bug Report
+description: Create a report to help us fix an issue in PitStrategy-X
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much details as possible.
+  - type: input
+    id: jira-id
+    attributes:
+      label: Jira Ticket Reference
+      description: Link or key to corresponding Jira issue (e.g. PIT-102)
+      placeholder: PIT-XXX
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions on how to reproduce the issue.
+      placeholder: |
+        1. Start service '...'
+        2. Send UDP packet with payload '...'
+        3. See error in logs
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - Engine Simulation (C/CUDA)
+        - Core Orchestration (Java/Spring)
+        - Telemetry Streaming (PySpark/Kafka)
+        - Ingestion Adapters
+        - Infrastructure / Docker / K8s
+    validations:
+      required: true

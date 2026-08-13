@@ -1,0 +1,19 @@
+name: Feature Request
+description: Suggest an idea or enhancement for PitStrategy-X
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: Detailed description of the requested capability or improvement.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Business & Engineering Rationale
+      description: Why should this feature be implemented? What problem does it solve in real-time telemetry/strategy simulation?
+    validations:
+      required: true

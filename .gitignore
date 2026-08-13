@@ -1,0 +1,51 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# C / C++ / CUDA Build Artifacts
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+build/
+bin/
+CMakeCache.txt
+CMakeFiles/
+*.exp
+
+# Python & Cython
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.c
+.venv/
+env/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Java / Spring Boot / Maven / Gradle
+target/
+.gradle/
+build/
+*.class
+*.jar
+*.war
+
+# Logs & Environment
+*.log
+.env
+.env.local
+
+# Docker & K8s local state
+.docker/
