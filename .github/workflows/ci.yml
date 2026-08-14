@@ -1,0 +1,35 @@
+name: PitStrategy-X CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  continuous-integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up JDK 21 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Sanity & Runtime Verification
+        run: |
+          echo "=========================================="
+          echo "Python version: $(python --version)"
+          echo "Java version: $(java -version 2>&1 | head -n 1)"
+          echo "🚀 PitStrategy-X Base CI initialized successfully!"
+          echo "=========================================="
