@@ -1,0 +1,149 @@
+services:
+  # ============================================================================
+  # Relational & Geospatial Storage (PostgreSQL 16 + PostGIS 3.4)
+  # ============================================================================
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: pitstrategy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pitstrategy_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pitstrategy_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pitstrategy_secure_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pitstrategy_admin} -d ${POSTGRES_DB:-pitstrategy_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pitstrategy-net
+
+  # ============================================================================
+  # Event Streaming Broker (Apache Kafka with KRaft Controller)
+  # ============================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: pitstrategy-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - pitstrategy-net
+
+  # ============================================================================
+  # Schema Registry (Avro Schema Management)
+  # ============================================================================
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.0
+    container_name: pitstrategy-schema-registry
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081'
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - pitstrategy-net
+
+  # ============================================================================
+  # Kafka Web UI (Provectus Kafka UI)
+  # ============================================================================
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: pitstrategy-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: pitstrategy-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+    depends_on:
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+    networks:
+      - pitstrategy-net
+
+  # ============================================================================
+  # Business Process & Decision Orchestrator (Camunda BPMN Platform 7 Run)
+  # ============================================================================
+  camunda:
+    image: camunda/camunda-bpm-platform:run-7.21.0
+    container_name: pitstrategy-camunda
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_DRIVER: org.postgresql.Driver
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-pitstrategy_db}
+      DB_USERNAME: ${POSTGRES_USER:-pitstrategy_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-pitstrategy_secure_pass}
+      WAIT_FOR: postgres:5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/engine-rest/version || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    networks:
+      - pitstrategy-net
+
+# ==============================================================================
+# Isolated Bridge Network
+# ==============================================================================
+networks:
+  pitstrategy-net:
+    name: pitstrategy-net
+    driver: bridge
+
+# ==============================================================================
+# Persistent Named Volumes
+# ==============================================================================
+volumes:
+  postgres_data:
+    name: pitstrategy-postgres-data
+  kafka_data:
+    name: pitstrategy-kafka-data
