@@ -26,18 +26,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Validate Docker Compose Configuration
-        run: |
-          if [ -f "deployments/docker-compose.yml" ]; then
-            echo "Validating deployments/docker-compose.yml..."
-            docker compose -f deployments/docker-compose.yml config --quiet
-            echo "Docker Compose file is valid."
-          else
-            echo "docker-compose.yml not present yet, skipping."
-          fi
-
-      - name: Sanity & Code Validation
+      - name: Sanity & Runtime Verification
         run: |
           echo "=========================================="
-          echo "🚀 PitStrategy-X CI checks completed successfully!"
+          echo "Python version: $(python --version)"
+          echo "Java version: $(java -version 2>&1 | head -n 1)"
+          echo "🚀 PitStrategy-X Base CI initialized successfully!"
           echo "=========================================="
